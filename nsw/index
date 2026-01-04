@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>NSW Junior Doctor Pay Calculator 2025 | Award C9839 Rates</title>
+    <meta name="description" content="Free NSW Health payslip calculator. Correctly calculates PH Overtime (2.5x), Clinical On-Call, SRMO rates, 10-hour roster limits, and automatic 80-hour fortnightly overtime.">
+    <meta name="keywords" content="NSW Health Pay, Junior Doctor Calculator, ASMOF Award, Clinical On Call Rates, PH Overtime Rates, JMO Pay NSW, SRMO Pay">
+    <meta name="author" content="InvisibleJunior">
+    
+    <meta property="og:title" content="NSW Junior Doctor Pay Calculator 2025">
+    <meta property="og:description" content="Estimate your fortnightly pay with the new Clinical On-Call rates, overtime logic, and SRMO classifications.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://invisiblejunior.github.io/Victoria-junior-doctor-pay-calculator/nsw/">
+
+    <style>
+        :root { --primary: #d32f2f; --bg: #f4f6f8; --card: #ffffff; } 
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg); color: #1c1e21; padding: 20px; max-width: 1200px; margin: 0 auto; 
+        }
+        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; color: var(--primary); margin-top: 0; }
+        .subtitle { font-size: 0.9em; color: #606770; margin-bottom: 20px; }
+        
+        .panel { background: var(--card); padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        select { padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        .role-select { width: 100%; max-width: 500px; padding: 12px; font-size: 16px; }
+        
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .grid-container { grid-template-columns: 1fr; } }
+        
+        .week-card { background: var(--card); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .week-header { font-weight: 700; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
+        .day-row { 
+            display: grid; 
+            /* Day | Start | End | U.OT | OC | PH | Status */
+            grid-template-columns: 35px 65px 65px 45px 55px 30px 1fr; 
+            gap: 6px; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        .day-label { font-weight: 600; font-size: 13px; color: #444; }
+        
+        input[type="text"] { padding: 8px 2px; border: 1px solid #ccc; border-radius: 4px; text-align: center; width: 100%; font-family: monospace; font-size: 13px; }
+        input[type="number"] { padding: 8px 2px; border: 1px solid #ccc; border-radius: 4px; text-align: center; width: 100%; font-size: 13px; }
+        
+        .oc-select { padding: 4px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; background: white; }
+        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+
+        .unrost-in { background: #ffebee; border-color: #ef9a9a !important; font-weight: bold; color: #c62828; }
+        
+        .status-cell { display: flex; flex-wrap: wrap; gap: 4px; }
+        .badge { 
+            font-size: 9px; font-weight: 700; text-transform: uppercase; 
+            padding: 3px 5px; border-radius: 3px; color: white; white-space: nowrap;
+        }
+
+        .bg-day { background-color: #757575; }
+        .bg-eve { background-color: #5e35b1; } 
+        .bg-night { background-color: #311b92; } 
+        .bg-sat { background-color: #0277bd; } 
+        .bg-sun { background-color: #00838f; } 
+        .bg-ph { background-color: #c2185b; } 
+        .bg-ot { background-color: #d32f2f; } 
+        .bg-ot-ph { background-color: #b71c1c; color: white; border: 1px solid #fff; }
+        .bg-oncall { background-color: #00695c; }
+        .bg-relief { background-color: #ff9800; color: black; }
+        .bg-allow { background-color: #455a64; }
+        .bg-break-warning { background-color: #ff5722; color: white; }
+        
+        .payslip-box { background: white; border: 1px solid #ccc; margin-top: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; margin-left: auto; margin-right: auto; }
+        .payslip-head { background: #263238; color: white; padding: 15px; font-weight: bold; text-align: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; color: #555; font-size: 12px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        td.amount { text-align: right; font-family: monospace; font-size: 15px; font-weight: 500; }
+        .total-row td { background: #f8f9fa; font-weight: bold; font-size: 16px; border-top: 2px solid #263238; color: #263238; }
+
+        .faq-box { margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .faq-title { color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .faq-q { font-weight: bold; color: #333; margin-top: 15px; margin-bottom: 5px; }
+        .faq-a { color: #555; line-height: 1.5; margin-bottom: 15px; font-size: 14px; }
+        .disclaimer { text-align:center; padding: 20px; font-size: 11px; color: #888; margin-top: 30px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <h2>NSW Junior Doctor Pay Calculator</h2>
+    <div class="subtitle"><strong>Basis:</strong> Award Variation C9839 (2024) | <strong>Rates:</strong> Interim 2025 Settlement</div>
+
+    <div class="panel">
+        <label><strong>Select Classification:</strong></label><br>
+        <select id="roleSelector" class="role-select" onchange="updateUI()">
+            <optgroup label="Intern & Residents">
+                <option value="INT">Intern (Year 1)</option>
+                <option value="RMO1">Resident Year 1 (PGY2)</option>
+                <option value="RMO2">Resident Year 2 (PGY3)</option>
+                <option value="RMO3">Resident Year 3 (PGY4)</option>
+                <option value="RMO4">Resident Year 4 (PGY5)</option>
+            </optgroup>
+            <optgroup label="Senior RMOs">
+                <option value="REG1">SRMO (Paid as Reg Yr 1)</option>
+                <option value="REG2">SRMO (Paid as Reg Yr 2)</option>
+            </optgroup>
+            <optgroup label="Registrars">
+                <option value="REG1">Registrar Year 1</option>
+                <option value="REG2">Registrar Year 2</option>
+                <option value="REG3">Registrar Year 3</option>
+                <option value="REG4">Registrar Year 4+</option>
+                <option value="SNR_REG">Senior Registrar</option>
+            </optgroup>
+        </select>
+        <div id="roleHint" style="margin-top:10px; font-size:13px; color:#666;"></div>
+    </div>
+
+    <div class="grid-container">
+        <div class="week-card" id="week1"></div>
+        <div class="week-card" id="week2"></div>
+    </div>
+
+    <div class="payslip-box">
+        <div class="payslip-head">ESTIMATED PAYSLIP (NSW)</div>
+        <table id="payslipTable">
+            <thead>
+                <tr>
+                    <th width="50%">Pay Component</th>
+                    <th width="15%">Units</th>
+                    <th width="15%">Rate</th>
+                    <th width="20%" style="text-align:right">Total</th>
+                </tr>
+            </thead>
+            <tbody id="payslipBody"></tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3">GROSS TOTAL</td>
+                    <td class="amount" id="grossTotal">$0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="panel faq-box">
+        <h3 class="faq-title">NSW Rules & Tips</h3>
+        
+        <div class="faq-q">Automatic 80-Hour Cap</div>
+        <div class="faq-a">
+            If your entered roster exceeds 80 ordinary hours, the calculator now <strong>automatically converts</strong> the excess into Overtime.
+            <br>
+            It does this chronologically (Day 1 to 14). Once you hit 80 hours, all subsequent hours become Overtime (1.5x/2.0x).
+        </div>
+
+        <div class="faq-q">Shift crossing a Public Holiday?</div>
+        <div class="faq-a">
+            We use <strong>Smart Checkboxes</strong>. 
+            Tick <strong>Monday PH</strong> -> Hours before midnight get 150%.
+            Tick <strong>Tuesday PH</strong> -> Hours after midnight get 150%.
+        </div>
+
+        <div class="faq-q">Paid Meal Breaks?</div>
+        <div class="faq-a">
+            <strong>Clause 10:</strong> Meal breaks on evening (finish >7pm), night, and weekend shifts are <strong>paid</strong>. 
+            The calculator detects this and includes the break in your payable hours.
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        * Unofficial estimator. Rules based on Public Hospital Medical Officers (State) Award Variation C9839.
+    </div>
+
+<script>
+    // === 1. DATA (Interim 2025 Salary Rates) ===
+    const RATES = {
+        "INT":    { weekly: 1488.12 }, 
+        "RMO1":   { weekly: 1572.04 }, 
+        "RMO2":   { weekly: 1680.15 }, 
+        "RMO3":   { weekly: 1852.85 }, 
+        "RMO4":   { weekly: 2025.66 }, 
+        "REG1":   { weekly: 2095.60 }, 
+        "REG2":   { weekly: 2241.80 }, 
+        "REG3":   { weekly: 2388.15 }, 
+        "REG4":   { weekly: 2534.50 }, 
+        "SNR_REG":{ weekly: 2827.05 }  
+    };
+
+    // NSW Allowances (Variation C9839)
+    const MEAL_ALLOWANCE = 35.65;
+    const OC_CLINICAL_ON = 106.20; 
+    const OC_CLINICAL_OFF = 213.20;
+    const OC_RELIEF_ON = 35.65; 
+    const OC_RELIEF_OFF = 71.30;
+    
+    const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // === 2. INIT ===
+    function init() {
+        renderWeek('week1', 0);
+        renderWeek('week2', 7);
+        updateUI();
+    }
+
+    function renderWeek(containerId, offset) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `
+            <div class="week-header">${offset===0 ? "Week 1" : "Week 2"}</div>
+            <div class="day-row header-labels">
+                <span style="font-size:10px; color:#888;">DAY</span>
+                <span style="font-size:10px; color:#888;">START</span>
+                <span style="font-size:10px; color:#888;">FINISH</span>
+                <span style="font-size:10px; color:#888;">U.OT</span>
+                <span style="font-size:10px; color:#888;" title="Type of On-Call">OC Type</span>
+                <span style="font-size:10px; color:#888;">PH</span>
+                <span style="font-size:10px; color:#888;">STATUS</span>
+            </div>
+        `;
+
+        DAYS.forEach((day, index) => {
+            const i = offset + index;
+            const div = document.createElement('div');
+            div.className = 'day-row';
+            div.innerHTML = `
+                <span class="day-label">${day}</span>
+                <input type="text" id="start_${i}" placeholder="0800" onblur="formatTime(this)" onchange="calculate()">
+                <input type="text" id="end_${i}" placeholder="1700" onblur="formatTime(this)" onchange="calculate()">
+                
+                <input type="number" id="unrost_${i}" class="unrost-in" placeholder="" min="0" max="15" step="0.5" tabindex="-1" onchange="calculate()" title="Unrostered Overtime">
+                
+                <select id="oc_${i}" class="oc-select" tabindex="-1" onchange="calculate()">
+                    <option value="">-</option>
+                    <option value="clin">C</option>
+                    <option value="relief">R</option>
+                </select>
+
+                <input type="checkbox" id="ph_${i}" tabindex="-1" onchange="calculate()">
+                
+                <div id="status_${i}" class="status-cell"></div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function updateUI() {
+        const roleKey = document.getElementById('roleSelector').value;
+        const r = RATES[roleKey];
+        document.getElementById('roleHint').innerHTML = `<strong>${roleKey}</strong>: Base ~$${r.weekly.toFixed(2)} / wk (38h)`;
+        calculate();
+    }
+
+    function formatTime(input) {
+        let val = input.value.replace(/[^0-9]/g, '');
+        if (!val) return;
+        if (val.length <= 2) {
+            if (parseInt(val) < 10) val = "0" + parseInt(val);
+            input.value = val + ":00";
+        } else if (val.length >= 3) {
+            if (val.length === 3) val = "0" + val;
+            input.value = val.substring(0,2) + ":" + val.substring(2,4);
+        }
+        calculate();
+    }
+
+    // === 3. CALCULATION ENGINE ===
+    function calculate() {
+        const roleKey = document.getElementById('roleSelector').value;
+        const rateData = RATES[roleKey];
+        const hourlyRate = rateData.weekly / 38; 
+        
+        let buckets = {
+            "Ordinary (Day)":       { total: 0, hrs: 0, displayRate: hourlyRate, css: "bg-day" },
+            "Evening (12.5%)":      { total: 0, hrs: 0, displayRate: hourlyRate * 1.125, css: "bg-eve" },
+            "Night (25%)":          { total: 0, hrs: 0, displayRate: hourlyRate * 1.25, css: "bg-night" },
+            "Saturday (50%)":       { total: 0, hrs: 0, displayRate: hourlyRate * 1.5, css: "bg-sat" },
+            "Sunday (75%)":         { total: 0, hrs: 0, displayRate: hourlyRate * 1.75, css: "bg-sun" },
+            "Ordinary PH (150%)":   { total: 0, hrs: 0, displayRate: hourlyRate * 1.5, css: "bg-ph" },
+            
+            "PH Not Worked (Paid)": { total: 0, hrs: 0, displayRate: hourlyRate, css: "bg-ph" },
+            
+            "Overtime (1.5x)":      { total: 0, hrs: 0, displayRate: hourlyRate * 1.5, css: "bg-ot" },
+            "Overtime (2.0x)":      { total: 0, hrs: 0, displayRate: hourlyRate * 2.0, css: "bg-ot" },
+            "Overtime (2.5x)":      { total: 0, hrs: 0, displayRate: hourlyRate * 2.5, css: "bg-ot-ph" }, 
+            
+            "OC-Clin (Rostered)":   { total: 0, count: 0, displayRate: OC_CLINICAL_ON, css: "bg-oncall" },
+            "OC-Clin (Day Off)":    { total: 0, count: 0, displayRate: OC_CLINICAL_OFF, css: "bg-oncall" },
+            "OC-Relief (Rostered)": { total: 0, count: 0, displayRate: OC_RELIEF_ON, css: "bg-relief" },
+            "OC-Relief (Day Off)":  { total: 0, count: 0, displayRate: OC_RELIEF_OFF, css: "bg-relief" },
+
+            "Meal Allowance":       { total: 0, count: 0, displayRate: MEAL_ALLOWANCE, css: "bg-allow" }
+        };
+
+        let prevEnd = null;
+        let cumulativeOrdinary = 0; // Tracks running total of contract hours (Limit 80)
+        let fortnightlyExcessOT = 0; // Used to track 1.5x allowance for excess rostered hours
+
+        // Clear badges
+        for(let k=0; k<14; k++) document.getElementById(`status_${k}`).innerHTML = '';
+
+        for (let i = 0; i < 14; i++) {
+            const startVal = document.getElementById(`start_${i}`).value;
+            const endVal = document.getElementById(`end_${i}`).value;
+            const unrostVal = parseFloat(document.getElementById(`unrost_${i}`).value) || 0;
+            
+            const isCurrentPH = document.getElementById(`ph_${i}`).checked;
+            let isNextPH = false;
+            if (i < 13) isNextPH = document.getElementById(`ph_${i+1}`).checked;
+
+            const ocType = document.getElementById(`oc_${i}`).value; 
+            let statusCell = document.getElementById(`status_${i}`);
+
+            let hasRostered = (startVal && endVal);
+
+            // PH Not Worked
+            if (isCurrentPH && !hasRostered) {
+                buckets["PH Not Worked (Paid)"].hrs += 7.6;
+                buckets["PH Not Worked (Paid)"].total += 7.6 * hourlyRate;
+                statusCell.innerHTML += `<span class="badge bg-ph">PH-OFF: +7.6h Pay</span> `;
+            }
+
+            // === ON CALL LOGIC ===
+            if (ocType === "clin") {
+                if (hasRostered) {
+                    buckets["OC-Clin (Rostered)"].count++;
+                    buckets["OC-Clin (Rostered)"].total += OC_CLINICAL_ON;
+                    statusCell.innerHTML += `<span class="badge bg-oncall">Clin-Duty</span> `;
+                } else {
+                    buckets["OC-Clin (Day Off)"].count++;
+                    buckets["OC-Clin (Day Off)"].total += OC_CLINICAL_OFF;
+                    statusCell.innerHTML += `<span class="badge bg-oncall">Clin-Off</span> `;
+                }
+            } else if (ocType === "relief") {
+                if (hasRostered) {
+                    buckets["OC-Relief (Rostered)"].count++;
+                    buckets["OC-Relief (Rostered)"].total += OC_RELIEF_ON;
+                    statusCell.innerHTML += `<span class="badge bg-relief">Rel-Duty</span> `;
+                } else {
+                    buckets["OC-Relief (Day Off)"].count++;
+                    buckets["OC-Relief (Day Off)"].total += OC_RELIEF_OFF;
+                    statusCell.innerHTML += `<span class="badge bg-relief">Rel-Off</span> `;
+                }
+            }
+
+            // --- HELPER: CHECK IF A SPECIFIC TIME IS PH ---
+            function checkIsPH(jsDate) {
+                let currentDayStart = new Date(2000, 0, 3 + i).getTime();
+                let nextDayStart = new Date(2000, 0, 3 + i + 1).getTime();
+                let t = new Date(jsDate.getFullYear(), jsDate.getMonth(), jsDate.getDate()).getTime();
+                if (t === currentDayStart && isCurrentPH) return true;
+                if (t === nextDayStart && isNextPH) return true;
+                return false;
+            }
+
+            // UNROSTERED OT
+            if (unrostVal > 0) {
+                 let refDate = new Date(2000, 0, 3 + i, 17, 0); 
+                 if (hasRostered) {
+                    let eParts = endVal.split(':');
+                    refDate = new Date(2000, 0, 3 + i, eParts[0], eParts[1]);
+                    let sParts = startVal.split(':');
+                    let startD = new Date(2000, 0, 3 + i, sParts[0], sParts[1]);
+                    if (refDate < startD) refDate.setDate(refDate.getDate() + 1);
+                 }
+
+                 let isOTonPH = checkIsPH(refDate);
+
+                 if (isOTonPH) {
+                    buckets["Overtime (2.5x)"].hrs += unrostVal;
+                    buckets["Overtime (2.5x)"].total += unrostVal * hourlyRate * 2.5;
+                    statusCell.innerHTML += `<span class="badge bg-ot-ph">U.OT 2.5x: ${unrostVal}h</span> `;
+                 } else {
+                    // Check if Sunday
+                    if (DAYS[i%7] === 'Sun') {
+                        buckets["Overtime (2.0x)"].hrs += unrostVal;
+                        buckets["Overtime (2.0x)"].total += unrostVal * hourlyRate * 2.0;
+                        statusCell.innerHTML += `<span class="badge bg-ot">U.OT 2.0x: ${unrostVal}h</span> `;
+                    } else {
+                        // All Unrostered OT is processed daily.
+                        // However, if we have exceeded 80 hours ordinary, does unrostered OT jump straight to 2.0x?
+                        // No, unrostered is separate. We treat it standardly.
+                        let u15 = Math.min(unrostVal, 2);
+                        let u20 = unrostVal - u15;
+                        buckets["Overtime (1.5x)"].hrs += u15;
+                        buckets["Overtime (1.5x)"].total += u15 * hourlyRate * 1.5;
+                        buckets["Overtime (2.0x)"].hrs += u20;
+                        buckets["Overtime (2.0x)"].total += u20 * hourlyRate * 2.0;
+                        
+                        if (u15 > 0) statusCell.innerHTML += `<span class="badge bg-ot">U.OT 1.5x: ${u15}h</span> `;
+                        if (u20 > 0) statusCell.innerHTML += `<span class="badge bg-ot">U.OT 2.0x: ${u20}h</span> `;
+                    }
+                 }
+                 
+                 if (unrostVal > 1) {
+                     buckets["Meal Allowance"].count++;
+                     buckets["Meal Allowance"].total += MEAL_ALLOWANCE;
+                 }
+            }
+
+            if (!hasRostered) {
+                prevEnd = null;
+                continue;
+            }
+
+            let sParts = startVal.split(':');
+            let eParts = endVal.split(':');
+            if (sParts.length !== 2 || eParts.length !== 2) continue;
+
+            let start = new Date(2000, 0, 3 + i, sParts[0], sParts[1]);
+            let end = new Date(2000, 0, 3 + i, eParts[0], eParts[1]);
+            if (end < start) end.setDate(end.getDate() + 1);
+
+            // --- 10 HOUR BREAK CHECK ---
+            if (prevEnd) {
+                let breakDur = (start - prevEnd) / 36e5;
+                if (breakDur < 10) {
+                     statusCell.innerHTML += `<span class="badge bg-break-warning">Short Break: ${breakDur.toFixed(1)}h</span> `;
+                }
+            }
+            prevEnd = end;
+
+            // PAID MEAL BREAK LOGIC
+            let rawDur = (end - start) / 36e5;
+            let isDayShift = false;
+            let dayOfWeek = start.getDay(); 
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Mon-Fri
+                let sH = start.getHours();
+                let eH = end.getHours();
+                if (sH >= 7 && (eH < 19 || (eH === 19 && end.getMinutes() === 0)) && end.getDate() === start.getDate()) {
+                    isDayShift = true;
+                }
+            }
+            if (!isDayShift && rawDur > 5) {
+                 statusCell.innerHTML += `<span class="badge bg-allow">Paid Break Inc.</span> `;
+            }
+
+            // === CALCULATE SPLIT: ORDINARY vs ROSTERED OT ===
+            let dailyOrdinary = rawDur;
+            let dailyRosteredOT = 0;
+            
+            // 1. Apply 10-Hour Daily Cap
+            if (rawDur > 10) {
+                dailyOrdinary = 10;
+                dailyRosteredOT = rawDur - 10;
+            }
+
+            // 2. Apply 80-Hour Fortnightly Cap (The New Logic)
+            // We need to check if adding 'dailyOrdinary' pushes us over 80
+            let hoursUntil80 = 80 - cumulativeOrdinary;
+            
+            if (hoursUntil80 <= 0) {
+                // We are already over 80. ALL of this 'dailyOrdinary' becomes 'Fortnightly Excess OT'
+                dailyRosteredOT += dailyOrdinary;
+                dailyOrdinary = 0;
+            } else if (dailyOrdinary > hoursUntil80) {
+                // We cross the line mid-shift
+                let shiftExcess = dailyOrdinary - hoursUntil80;
+                dailyOrdinary = hoursUntil80;
+                dailyRosteredOT += shiftExcess;
+            }
+            
+            cumulativeOrdinary += dailyOrdinary;
+
+            // === PROCESS ROSTERED OT (Daily + Fortnightly Excess) ===
+            if (dailyRosteredOT > 0) {
+                // Check if this OT is on a PH (Higher Penalty Wins - Clause 11v)
+                // We estimate the OT occurs at end of shift
+                let otTestTime = new Date(end.getTime() - (dailyRosteredOT * 3600000));
+                let isRostOTonPH = checkIsPH(otTestTime);
+
+                if (isRostOTonPH) {
+                    buckets["Overtime (2.5x)"].hrs += dailyRosteredOT;
+                    buckets["Overtime (2.5x)"].total += dailyRosteredOT * hourlyRate * 2.5;
+                    statusCell.innerHTML += `<span class="badge bg-ot-ph">R.OT 2.5x: ${dailyRosteredOT.toFixed(1)}h</span> `;
+                } else {
+                    // Standard OT Logic (1.5x first 2 hours, then 2.0x)
+                    // Note: If this is "Fortnightly Excess", does it have its own 2-hour counter? Yes.
+                    // But we simply process it shift-by-shift.
+                    let r15 = Math.min(dailyRosteredOT, 2);
+                    let r20 = dailyRosteredOT - r15;
+                    
+                    let endDay = end.getDay(); 
+                    if (endDay === 0) { r20 += r15; r15 = 0; } // Sunday is all 2.0x
+
+                    buckets["Overtime (1.5x)"].hrs += r15;
+                    buckets["Overtime (1.5x)"].total += r15 * hourlyRate * 1.5;
+                    buckets["Overtime (2.0x)"].hrs += r20;
+                    buckets["Overtime (2.0x)"].total += r20 * hourlyRate * 2.0;
+                    
+                    if (r15 > 0) statusCell.innerHTML += `<span class="badge bg-ot">R.OT 1.5x: ${r15.toFixed(1)}h</span> `;
+                    if (r20 > 0) statusCell.innerHTML += `<span class="badge bg-ot">R.OT 2.0x: ${r20.toFixed(1)}h</span> `;
+                }
+            }
+
+            // === PROCESS ORDINARY HOURS (Time Slicing) ===
+            // Only iterate for 'dailyOrdinary' duration
+            let stats = { day: 0, eve: 0, night: 0, sat: 0, sun: 0, ph: 0 };
+            let tempTime = new Date(start);
+            let ordinaryEnd = new Date(start.getTime() + (dailyOrdinary * 3600000));
+            
+            while (tempTime < ordinaryEnd) {
+                let nextHour = new Date(tempTime);
+                nextHour.setHours(tempTime.getHours() + 1, 0, 0);
+                if (nextHour > ordinaryEnd) nextHour = ordinaryEnd;
+                let dur = (nextHour - tempTime) / 36e5;
+                
+                let d = tempTime.getDay(); 
+                let h = tempTime.getHours();
+                let type = 'day';
+                
+                if (checkIsPH(tempTime)) type = 'ph';
+                else if (d === 0) type = 'sun'; 
+                else if (d === 6) type = 'sat'; 
+                else if (h < 7) type = 'night';
+                else if (h >= 18) type = 'eve';
+
+                stats[type] += dur;
+                tempTime = nextHour;
+            }
+
+            buckets["Ordinary PH (150%)"].hrs += stats.ph;
+            buckets["Ordinary PH (150%)"].total += stats.ph * hourlyRate * 1.5; 
+            buckets["Sunday (75%)"].hrs += stats.sun;
+            buckets["Sunday (75%)"].total += stats.sun * hourlyRate * 1.75;
+            buckets["Saturday (50%)"].hrs += stats.sat;
+            buckets["Saturday (50%)"].total += stats.sat * hourlyRate * 1.5;
+            buckets["Night (25%)"].hrs += stats.night;
+            buckets["Night (25%)"].total += stats.night * hourlyRate * 1.25;
+            buckets["Evening (12.5%)"].hrs += stats.eve;
+            buckets["Evening (12.5%)"].total += stats.eve * hourlyRate * 1.125;
+            buckets["Ordinary (Day)"].hrs += stats.day;
+            buckets["Ordinary (Day)"].total += stats.day * hourlyRate;
+
+            if(stats.ph > 0) statusCell.innerHTML += `<span class="badge bg-ph">PH: ${stats.ph.toFixed(1)}h</span> `;
+            if(stats.sun > 0) statusCell.innerHTML += `<span class="badge bg-sun">SUN: ${stats.sun.toFixed(1)}h</span> `;
+            if(stats.sat > 0) statusCell.innerHTML += `<span class="badge bg-sat">SAT: ${stats.sat.toFixed(1)}h</span> `;
+            if(stats.night > 0) statusCell.innerHTML += `<span class="badge bg-night">NGT: ${stats.night.toFixed(1)}h</span> `;
+            if(stats.eve > 0) statusCell.innerHTML += `<span class="badge bg-eve">EVE: ${stats.eve.toFixed(1)}h</span> `;
+            if(stats.day > 0) statusCell.innerHTML += `<span class="badge bg-day">ORD: ${stats.day.toFixed(1)}h</span> `;
+        }
+
+        renderPayslip(buckets);
+    }
+
+    function renderPayslip(buckets) {
+        const tbody = document.getElementById('payslipBody');
+        tbody.innerHTML = '';
+        let grandTotal = 0;
+
+        for (const [name, data] of Object.entries(buckets)) {
+            if (data.total <= 0.01) continue;
+            
+            let rateTxt = `$${(data.displayRate || 0).toFixed(2)}`;
+            let unitTxt = "";
+            if (name.includes("OC") || name.includes("Meal")) unitTxt = Math.round(data.count);
+            else unitTxt = data.hrs.toFixed(2) + " h";
+
+            const badgeHtml = `<span class="badge ${data.css}" style="margin-right:8px; font-size:11px;">${name}</span>`;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${badgeHtml}</td><td>${unitTxt}</td><td>${rateTxt}</td><td class="amount">$${data.total.toFixed(2)}</td>`;
+            tbody.appendChild(tr);
+            grandTotal += data.total;
+        }
+        document.getElementById('grossTotal').innerText = '$' + grandTotal.toFixed(2);
+    }
+
+    init();
+</script>
+
+</body>
+</html>
