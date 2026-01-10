@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QLD Junior Doctor Pay Calculator 2025 | MOCA7</title>
+    <style>
+        :root { --primary: #0077c2; --bg: #f4f7f6; --card: #ffffff; --text: #333; --border: #e0e0e0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg); color: var(--text); padding: 20px; max-width: 1280px; margin: 0 auto; 
+        }
+        h2 { border-bottom: 3px solid var(--primary); padding-bottom: 10px; color: var(--primary); margin-top: 0; }
+        
+        /* --- LAYOUT --- */
+        .controls-panel { 
+            background: var(--card); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; border: 1px solid var(--border);
+        }
+        .control-group { flex: 1; min-width: 280px; }
+        .control-group label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 13px; color: #555; }
+        .control-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+
+        .checkbox-group { 
+            background: #e3f2fd; padding: 12px; border-radius: 6px; border: 1px solid #90caf9; 
+            margin-bottom: 8px; cursor: pointer; display: flex; align-items: center;
+        }
+        .checkbox-group input { margin-right: 12px; transform: scale(1.3); }
+        .checkbox-desc { font-size: 12px; color: #1565c0; display: block; margin-top: 2px; }
+
+        /* --- GRID --- */
+        .week-container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .week-card { flex: 1; min-width: 550px; background: var(--card); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .week-title { font-weight: 800; color: var(--primary); margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        .grid-row { 
+            display: grid; 
+            grid-template-columns: 40px 75px 75px 60px 80px 60px 100px 1fr; 
+            gap: 10px; align-items: center; margin-bottom: 10px;
+        }
+        .header-row { margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+        .header-label { font-size: 11px; font-weight: 800; color: #777; text-transform: uppercase; text-align: center; }
+        .day-label { font-weight: 700; font-size: 14px; color: #444; }
+
+        /* Inputs */
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 8px 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; text-align: center;
+        }
+        .inp-uot { background-color: #fff0f0; border-color: #ffcdd2; color: #c62828; font-weight: bold; }
+        .inp-ph { font-weight: bold; color: #333; }
+        .check-box { transform: scale(1.4); cursor: pointer; display: block; margin: 0 auto; }
+
+        /* Badges */
+        .status-cell { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; align-items: center; }
+        .badge { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; color: white; white-space: nowrap; }
+        
+        .bg-ord { background: #757575; }
+        .bg-eve { background: #8e24aa; }
+        .bg-night { background: #3949ab; }
+        .bg-sat { background: #039be5; }
+        .bg-sun { background: #00897b; }
+        .bg-ph { background: #d81b60; }
+        .bg-ot { background: #d32f2f; }
+        .bg-bank { background: #43a047; } 
+        .bg-prox { background: #fb8c00; }
+        .bg-allow { background: #546e7a; }
+        .bg-cap { background: #f4511e; }
+        
+        .badge-fatigue { background-color: #d32f2f; box-shadow: 0 0 4px #d32f2f; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* Payslip */
+        .payslip-box { max-width: 800px; margin: 30px auto; background: white; border: 1px solid #ddd; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .payslip-header { background: #37474f; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px; background: #eceff1; border-bottom: 2px solid #cfd8dc; color: #455a64; font-weight: 700; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        td.amount { text-align: right; font-family: monospace; font-size: 15px; font-weight: 600; color: #263238; }
+        .total-row td { background: #f5f5f5; font-weight: 800; border-top: 2px solid #333; font-size: 16px; }
+
+        .alert-box { 
+            background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; 
+            padding: 15px; margin: 20px 0; border-radius: 6px; text-align: center; font-weight: bold; display: none;
+        }
+        
+        #hoursCounter { font-size: 14px; color: #0277bd; font-weight: bold; margin-top: 8px; }
+
+        /* Rules Box */
+        .rules-container { 
+            margin-top: 50px; background: #fff; border: 1px solid #e0e0e0; 
+            border-radius: 8px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .rules-title { font-size: 18px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; }
+        .rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 800px) { .rule-grid { grid-template-columns: 1fr; } }
+        .rule-item h4 { margin: 0 0 8px 0; color: #333; font-size: 15px; }
+        .rule-item p { margin: 0 0 15px 0; font-size: 13px; color: #666; line-height: 1.5; }
+        .rule-tag { display: inline-block; padding: 2px 6px; background: #eee; border-radius: 4px; font-size: 11px; font-weight: bold; color: #555; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>QLD Junior Doctor Pay Calculator</h2>
+
+    <div class="controls-panel">
+        <div class="control-group">
+            <label>Classification Level</label>
+            <select id="roleSelector" onchange="updateUI()" tabindex="-1">
+                <optgroup label="Intern & House Officers">
+                    <option value="INT">Intern (L1)</option>
+                    <option value="JHO">Junior House Officer (L2)</option>
+                    <option value="SHO">Senior House Officer (L3)</option>
+                </optgroup>
+                <optgroup label="Registrars & PHOs">
+                    <option value="PHO">PHO / Registrar Yr 1 (L4)</option>
+                    <option value="REG2">Registrar Yr 2 (L5)</option>
+                    <option value="REG3">Registrar Yr 3 (L6)</option>
+                    <option value="REG4">Registrar Yr 4 (L7)</option>
+                    <option value="REG5">Registrar Yr 5 (L8)</option>
+                    <option value="REG6">Registrar Yr 6 (L9)</option>
+                    <option value="SNR_REG">Senior Reg / Fellow (L10)</option>
+                </optgroup>
+            </select>
+            <div id="roleHint" style="font-size:12px; margin-top:5px; color:#666;"></div>
+            <div id="hoursCounter">Hours: 0.0 / 76</div>
+        </div>
+
+        <div class="control-group">
+            <div class="checkbox-group" onclick="document.getElementById('adoCheck').click()">
+                <input type="checkbox" id="adoCheck" checked onchange="updateUI()" tabindex="-1">
+                <div>
+                    <strong>Accrue ADO (Work 80h, Paid 76h)</strong>
+                    <span class="checkbox-desc">Hours 76-80 are Banked. Penalty loadings are paid immediately.</span>
+                </div>
+            </div>
+
+            <div class="checkbox-group" onclick="document.getElementById('shiftWorkerCheck').click()">
+                <input type="checkbox" id="shiftWorkerCheck" onchange="updateUI()" tabindex="-1">
+                <div>
+                    <strong>Shift Worker (Rotating Roster)</strong>
+                    <span class="checkbox-desc">Check this if you work rotating shifts. OT becomes 2.0x.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="week-container">
+        <div class="week-card" id="week1"></div>
+        <div class="week-card" id="week2"></div>
+    </div>
+
+    <div id="capAlert" class="alert-box"></div>
+
+    <div class="payslip-box">
+        <div class="payslip-header">ESTIMATED PAYSLIP BREAKDOWN</div>
+        <table id="payslipTable">
+            <thead>
+                <tr>
+                    <th width="45%">Pay Component</th>
+                    <th width="15%">Hours</th>
+                    <th width="20%">Rate Calculation</th>
+                    <th width="20%" style="text-align:right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="payslipBody"></tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3">GROSS TOTAL (Pre-Tax)</td>
+                    <td class="amount" id="grossTotal">$0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="rules-container">
+        <div class="rules-title">Calculator Rules & MOCA Logic</div>
+        <div class="rule-grid">
+            
+            <div class="rule-item">
+                <span class="rule-tag">ADO & PENALTIES</span>
+                <h4>Penalty Loading Protection</h4>
+                <p>
+                    If you bank ADO on an hour that attracts a penalty (e.g. Sunday Double Time), the calculator banks the Base Hour (1.0x) for leave but 
+                    <strong>pays you the penalty loading immediately</strong> in cash. 
+                    <br><em>Look for "Penalty Loading" on your payslip estimate.</em>
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <span class="rule-tag">FORTNIGHTLY CAP</span>
+                <h4>76 vs 80 Hours</h4>
+                <p>
+                    <strong>With ADO accrual:</strong> You work 80 hours. Hours between 76–80 are banked. OT triggers > 80h.<br>
+                    <strong>Without ADO accrual:</strong> OT triggers > 76h.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <span class="rule-tag">OVERTIME RATES</span>
+                <h4>Sunday & Shift Rules</h4>
+                <p>
+                    <strong>Sunday Rule:</strong> All overtime on a Sunday is paid at <strong>200% (Double Time)</strong>.<br>
+                    <strong>Shift Workers:</strong> All other OT is 200%.<br>
+                    <strong>Day Workers:</strong> OT is 150% for the first 3 hours (Mon-Sat), then 200%.
+                </p>
+            </div>
+
+            <div class="rule-item">
+                <span class="rule-tag">FATIGUE</span>
+                <h4>The 10-Hour Break Rule</h4>
+                <p>
+                    If the gap between shifts (including Unrostered OT) is <strong>less than 10 hours</strong>, the next shift is paid at <strong>200%</strong>.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    // === MOCA7 DRAFT RATES (Annual / 26.089 approx) ===
+    const RATES = {
+        "INT": 3628.70, "JHO": 3911.90, "SHO": 4200.30,
+        "PHO": 5130.40, "REG2": 5272.60, "REG3": 5415.70,
+        "REG4": 5634.80, "REG5": 5783.00, "REG6": 5931.50, "SNR_REG": 6524.30
+    };
+    const PDAS = { 
+        "INT": 104.58, "JHO": 104.58, "SHO": 104.58,
+        "PHO": 174.38, "REG2": 174.38, "REG3": 174.38, "REG4": 174.38, 
+        "REG5": 174.38, "REG6": 174.38, "SNR_REG": 174.38 
+    };
+    const PROX_RATE = 296.58; 
+    const PROX_RATE_SUN = 444.86;
+    const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    function init() {
+        renderWeek('week1', 0);
+        renderWeek('week2', 7);
+        updateUI();
+    }
+
+    function renderWeek(id, offset) {
+        const c = document.getElementById(id);
+        c.innerHTML = `
+            <div class="week-title">${offset===0 ? "Week 1" : "Week 2"}</div>
+            <div class="grid-row header-row">
+                <span class="header-label" style="text-align:left">Day</span>
+                <span class="header-label">Start</span>
+                <span class="header-label">Finish</span>
+                <span class="header-label">U.OT</span>
+                <span class="header-label">Call</span>
+                <span class="header-label">Meal</span>
+                <span class="header-label">Pay as PH?</span>
+                <span class="header-label" style="text-align:left">Penalties Applied</span>
+            </div>
+        `;
+        DAYS.forEach((d, i) => {
+            const idx = offset + i;
+            c.innerHTML += `
+            <div class="grid-row">
+                <span class="day-label">${d}</span>
+                <input type="text" id="s_${idx}" placeholder="0800" tabindex="1" onblur="smartFormat(this)" onchange="calc()">
+                <input type="text" id="e_${idx}" placeholder="1700" tabindex="1" onblur="smartFormat(this)" onchange="calc()">
+                <input type="number" id="uot_${idx}" class="inp-uot" step="0.5" tabindex="-1" onchange="calc()" placeholder="0">
+                <select id="oc_${idx}" tabindex="-1" onchange="calc()">
+                    <option value="">-</option><option value="rem">Rem</option><option value="prox">Prox</option>
+                </select>
+                <div style="text-align:center"><input type="checkbox" id="nm_${idx}" class="check-box" tabindex="-1" onchange="calc()" title="Missed Meal Break?"></div>
+                <select id="ph_${idx}" class="inp-ph" tabindex="-1" onchange="calc()">
+                    <option value="0">-</option>
+                    <option value="1.5">Std (1.5)</option>
+                    <option value="2.5">Super (2.5)</option>
+                </select>
+                <div id="badge_${idx}" class="status-cell"></div>
+            </div>`;
+        });
+    }
+
+    function smartFormat(el) {
+        let v = el.value.trim().replace(/\D/g, ''); 
+        if (!v) return;
+        if (v.length === 1) v = "0" + v + "00";
+        else if (v.length === 2) v = v + "00";
+        else if (v.length === 3) v = "0" + v;
+        if (v.length > 4) v = v.substring(0, 4);
+        if (v.length === 4) el.value = v.substring(0, 2) + ":" + v.substring(2, 4);
+        calc();
+    }
+
+    function updateUI() {
+        const r = document.getElementById('roleSelector').value;
+        const base = RATES[r];
+        const hourly = base / 76;
+        document.getElementById('roleHint').innerHTML = `Base Rate: $${base.toLocaleString()} / fn ($${hourly.toFixed(2)}/hr)`;
+        calc();
+    }
+
+    function calc() {
+        const role = document.getElementById('roleSelector').value;
+        const isShift = document.getElementById('shiftWorkerCheck').checked;
+        const accrueADO = document.getElementById('adoCheck').checked;
+        const hourly = RATES[role] / 76; 
+        const pda = PDAS[role];
+
+        let b = {
+            "Ordinary": { h:0, r:1.0, css:'bg-ord', desc:"Base Rate" },
+            "Afternoon": { h:0, r:1.15, css:'bg-eve', desc:"Afternoon (15%)" },
+            "Night": { h:0, r:1.20, css:'bg-night', desc:"Night (20%)" },
+            "Saturday": { h:0, r:1.5, css:'bg-sat', desc:"Sat (150%)" },
+            "Sunday": { h:0, r:2.0, css:'bg-sun', desc:"Sun (200%)" },
+            "PH Std": { h:0, r:1.5, css:'bg-ph', desc:"PH Standard (150%)" },
+            "PH Super": { h:0, r:2.5, css:'bg-ph', desc:"PH Super (250%)" },
+            "ADO Banked": { h:0, r:0.0, css:'bg-bank', desc:"Banked for ADO" }, 
+            "Penalty Loading": { h:0, val:0, css:'bg-allow', desc:"Penalty Loading (Paid on Banked Hours)" }, 
+            "OT 1.5x": { h:0, r:1.5, css:'bg-ot', desc:"Overtime (150%)" },
+            "OT 2.0x": { h:0, r:2.0, css:'bg-ot', desc:"Overtime (200%)" },
+            "OT 2.5x": { h:0, r:2.5, css:'bg-ot', desc:"PH Overtime (250%)" },
+            "Fatigue": { h:0, r:2.0, css:'badge-fatigue', desc:"Fatigue (200%)" },
+            "Proximate": { c:0, val:0, css:'bg-prox', desc:"Proximate Call Allowance" },
+            "Remote Call": { h:0, r:0.08, css:'bg-allow', desc:"Remote Call (8%)" }
+        };
+
+        let cumulativeWork = 0;
+        let prevEnd = null;
+        let capMsg = "";
+
+        for(let i=0; i<14; i++) document.getElementById(`badge_${i}`).innerHTML = '';
+
+        for(let i=0; i<14; i++) {
+            let sStr = document.getElementById(`s_${i}`).value;
+            let eStr = document.getElementById(`e_${i}`).value;
+            let uot = parseFloat(document.getElementById(`uot_${i}`).value) || 0;
+            let oc = document.getElementById(`oc_${i}`).value;
+            let noMeal = document.getElementById(`nm_${i}`).checked;
+            let phVal = parseFloat(document.getElementById(`ph_${i}`).value);
+
+            if(oc === 'prox') {
+                let isSun = (i%7 === 6);
+                b["Proximate"].c++;
+                b["Proximate"].val += isSun ? PROX_RATE_SUN : PROX_RATE;
+                addBadge(i, "Prox Call", "bg-prox");
+            } else if (oc === 'rem' && !sStr) {
+                b["Remote Call"].h += 12;
+                addBadge(i, "Rem Call", "bg-allow");
+            }
+
+            let dailyOT = 0; 
+            let isFatigued = false; 
+
+            // --- ROSTERED SHIFT ---
+            if(sStr && eStr) {
+                let d1 = new Date(2000,0,1+i);
+                let t1 = parseTime(sStr, d1);
+                let t2 = parseTime(eStr, d1);
+                if(t2 < t1) t2.setDate(t2.getDate()+1);
+
+                // Fatigue Logic
+                if(prevEnd) {
+                    let diffMs = t1 - prevEnd; 
+                    let diffHrs = diffMs / (1000 * 60 * 60);
+                    if(diffHrs < 10) { 
+                        isFatigued = true; 
+                        addBadge(i, "FATIGUE", "badge-fatigue");
+                    }
+                }
+                prevEnd = new Date(t2.getTime() + (uot * 3600000));
+
+                let raw = (t2 - t1) / 36e5;
+                let paidDur = raw > 5 ? raw - 0.5 : raw;
+
+                let rostOT = 0;
+                if(paidDur > 10) { rostOT = paidDur - 10; paidDur = 10; }
+
+                // --- 76h CAP LOGIC ---
+                let hrsOrd = 0;
+                let hrsBank = 0;
+                let hrsCapOT = 0;
+                let remaining = paidDur;
+
+                // 1. Fill Paid Cap (76h)
+                let spaceInPaid = Math.max(0, 76 - cumulativeWork);
+                let takeOrd = Math.min(remaining, spaceInPaid);
+                hrsOrd = takeOrd;
+                cumulativeWork += takeOrd;
+                remaining -= takeOrd;
+
+                // 2. Fill Banked (76-80h) if ADO on
+                if(remaining > 0 && accrueADO) {
+                    if(phVal > 0) {
+                        // PH protection: Don't bank PH hours (Simplified: Fall through to Cap OT)
+                    } else {
+                        let spaceInBank = Math.max(0, 80 - cumulativeWork);
+                        let takeBank = Math.min(remaining, spaceInBank);
+                        hrsBank = takeBank;
+                        cumulativeWork += takeBank;
+                        remaining -= takeBank;
+                    }
+                }
+
+                hrsCapOT = remaining;
+                cumulativeWork += hrsCapOT;
+
+                // --- BUCKETING ---
+                if(hrsOrd > 0) {
+                    if(isFatigued) {
+                        b["Fatigue"].h += hrsOrd;
+                    } else {
+                        let bucketKey = getShiftBucket(t1, t2, i, phVal);
+                        b[bucketKey].h += hrsOrd;
+                        addBadge(i, b[bucketKey].desc, b[bucketKey].css);
+                    }
+                }
+                
+                if(hrsBank > 0) {
+                    // ADO Banked Logic: 
+                    b["ADO Banked"].h += hrsBank;
+                    addBadge(i, "ADO Banked", "bg-bank");
+
+                    // 2. PAY THE PENALTY LOADING if applicable
+                    let loading = 0;
+                    if(isFatigued) loading = 1.0; 
+                    else {
+                        let bk = getShiftBucket(t1, t2, i, phVal);
+                        loading = b[bk].r - 1.0; 
+                    }
+                    
+                    if(loading > 0.01) {
+                        b["Penalty Loading"].val += (hrsBank * loading * hourly);
+                        addBadge(i, `+${(loading*100).toFixed(0)}% Paid (ADO)`, "bg-allow");
+                    }
+                }
+                
+                if(hrsCapOT > 0) {
+                    let day = i % 7;
+                    if(isFatigued) {
+                        b["Fatigue"].h += hrsCapOT;
+                    } else if(isShift || phVal > 0 || day === 6) { 
+                         let r = (phVal > 0) ? "OT 2.5x" : "OT 2.0x";
+                         b[r].h += hrsCapOT;
+                    } else {
+                         let quotaLeft = Math.max(0, 3 - dailyOT);
+                         let take15 = Math.min(hrsCapOT, quotaLeft);
+                         let take20 = hrsCapOT - take15;
+                         if(take15 > 0) b["OT 1.5x"].h += take15;
+                         if(take20 > 0) b["OT 2.0x"].h += take20;
+                         dailyOT += hrsCapOT;
+                    }
+                    if(!isFatigued) addBadge(i, "Cap OT", "bg-cap");
+                    capMsg = "Cap Reached";
+                }
+
+                if(rostOT > 0) {
+                    let day = i % 7;
+                    if(isFatigued) {
+                        b["Fatigue"].h += rostOT; 
+                    } else if(isShift || phVal > 0 || day === 6) {
+                         let r = (phVal > 0) ? "OT 2.5x" : "OT 2.0x";
+                         b[r].h += rostOT;
+                    } else {
+                         let quotaLeft = Math.max(0, 3 - dailyOT);
+                         let take15 = Math.min(rostOT, quotaLeft);
+                         let take20 = rostOT - take15;
+                         if(take15 > 0) b["OT 1.5x"].h += take15;
+                         if(take20 > 0) b["OT 2.0x"].h += take20;
+                         dailyOT += rostOT;
+                    }
+                    if(!isFatigued) addBadge(i, "Rostered OT", "bg-ot");
+                }
+            } 
+
+            // UNROSTERED OT
+            if(uot > 0) {
+                let day = i % 7;
+                if(isFatigued) {
+                    b["Fatigue"].h += uot; 
+                } else if(isShift || phVal > 0 || day === 6) {
+                    let r = (phVal == 2.5) ? "OT 2.5x" : "OT 2.0x";
+                    b[r].h += uot;
+                } else {
+                    let quotaLeft = Math.max(0, 3 - dailyOT);
+                    let take15 = Math.min(uot, quotaLeft);
+                    let take20 = uot - take15;
+                    if(take15 > 0) b["OT 1.5x"].h += take15;
+                    if(take20 > 0) b["OT 2.0x"].h += take20;
+                    dailyOT += uot;
+                }
+                addBadge(i, `U.OT (${uot}h)`, "bg-ot");
+            }
+
+            // MEAL
+            if(noMeal) {
+                let r = (phVal > 0) ? "OT 2.5x" : "OT 2.0x";
+                b[r].h += 0.5;
+                addBadge(i, "Missed Meal", "bg-ot");
+            }
+        }
+
+        // UPDATE UI
+        let displayLimit = accrueADO ? 80 : 76;
+        let counterDiv = document.getElementById('hoursCounter');
+        counterDiv.innerText = `Total Worked: ${cumulativeWork.toFixed(1)}h / ${displayLimit}h Cap`;
+        if(cumulativeWork > displayLimit) counterDiv.style.color = "#d32f2f";
+        else counterDiv.style.color = "#0277bd";
+
+        let alertBox = document.getElementById('capAlert');
+        if(capMsg) {
+            alertBox.style.display = 'block';
+            alertBox.innerText = `Fortnightly Cap Exceeded: Excess hours are being paid as Overtime.`;
+        } else {
+            alertBox.style.display = 'none';
+        }
+
+        // TABLE
+        const tbody = document.getElementById('payslipBody');
+        tbody.innerHTML = '';
+        let gross = 0;
+        
+        gross += pda;
+        tbody.innerHTML += `<tr><td><strong>Professional Dev Allowance</strong></td><td>1</td><td>Fixed</td><td class="amount">$${pda.toFixed(2)}</td></tr>`;
+
+        for(let k in b) {
+            let d = b[k];
+            let val = 0;
+            
+            if(k === "Proximate") val = d.val;
+            else if(k === "ADO Banked") val = 0;
+            else if(k === "Penalty Loading") val = d.val || 0; 
+            else val = d.h * hourly * d.r;
+
+            if(d.h > 0.01 || d.val > 0.01) {
+                gross += val;
+                let unit = (k==="Proximate") ? d.c + " shifts" : (d.h ? d.h.toFixed(2) + " h" : "-");
+                let rateDisp = "";
+                
+                if(k==="Proximate") rateDisp = "-";
+                else if(k==="ADO Banked") rateDisp = "Banked";
+                else if(k==="Penalty Loading") rateDisp = "Variable";
+                else rateDisp = `${d.r}x ($${(hourly*d.r).toFixed(2)})`;
+                
+                tbody.innerHTML += `
+                <tr>
+                    <td><span class="badge ${d.css}" style="font-size:11px; margin-right:8px;">${k}</span> ${d.desc}</td>
+                    <td>${unit}</td>
+                    <td>${rateDisp}</td>
+                    <td class="amount">$${val.toFixed(2)}</td>
+                </tr>`;
+            }
+        }
+        document.getElementById('grossTotal').innerText = "$" + gross.toFixed(2);
+    }
+
+    function parseTime(s, d) {
+        let p = s.split(':');
+        let nd = new Date(d);
+        nd.setHours(parseInt(p[0]), parseInt(p[1]), 0, 0);
+        return nd;
+    }
+
+    function addBadge(i, txt, css) {
+        document.getElementById(`badge_${i}`).innerHTML += `<span class="badge ${css}">${txt}</span>`;
+    }
+
+    function getShiftBucket(t1, t2, i, ph) {
+        if(ph === 2.5) return "PH Super";
+        if(ph === 1.5) return "PH Std";
+        
+        let day = i % 7; 
+        if(day === 6) return "Sunday";
+        if(day === 5) return "Saturday";
+
+        let sH = t1.getHours();
+        if(sH >= 18 || sH < 6) return "Night";
+        if(sH >= 12 && t2.getHours() > 18) return "Afternoon";
+        
+        return "Ordinary";
+    }
+
+    init();
+</script>
+
+</body>
+</html>
